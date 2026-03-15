@@ -22,8 +22,7 @@ The Dissenter (High Thinking): Uses Gemini 3's advanced reasoning to perform dee
 
 The Synthesizer (Medium Thinking): Acts as the objective judge, weighing both sides to produce a Balanced Intelligence Briefing.
 
-![Alt text](downloads/unnamed.png)
-
+<img width="1536" height="2752" alt="Image" src="https://github.com/user-attachments/assets/9582a114-5be4-40af-bb83-7d4bd9671c85" />
 
 🚀 Key Features
 Adversarial Reasoning: Unlike standard chatbots, our agents are prompted to disagree, uncovering "hidden" truths.
