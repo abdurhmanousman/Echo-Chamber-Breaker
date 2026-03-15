@@ -1,0 +1,56 @@
+from google import genai
+from google.genai import types
+
+client = genai.Client(api_key="YOUR_API_KEY")
+
+# Define the Google Search tool
+google_search_tool = types.Tool(
+    google_search=types.GoogleSearch()
+)
+
+def scout_with_tools(topic):
+    # The Scout uses Search to find the 'trending' or 'mainstream' view
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        config=types.GenerateContentConfig(
+            tools=[google_search_tool],
+            system_instruction="You are the Scout. Use Google Search to find the most widely accepted arguments for this topic."
+        ),
+        contents=topic
+    )
+    return response.text
+def load_source_material(file_path):
+    # Upload a research paper or PDF to the Gemini File API
+    file = client.files.upload(file=file_path)
+    return file
+
+def verifier_agent(claim, file_ref):
+    # This agent checks the claim against your specific 'Ground Truth' files
+    response = client.models.generate_content(
+        model="gemini-3-flash-preview",
+        contents=[
+            file_ref,
+            f"Verify if the following claim is supported by the document: {claim}"
+        ]
+    )
+    return response.text
+def calculate_bias_score(supporting_count: int, opposing_count: int):
+    """Calculates a bias ratio based on the number of sources found."""
+    if supporting_count == 0 and opposing_count == 0: return 0
+    return (supporting_count - opposing_count) / (supporting_count + opposing_count)
+
+# Register the function as a tool
+bias_tool = types.Tool(
+    function_declarations=[{
+        "name": "calculate_bias_score",
+        "description": "Calculates the bias ratio of gathered research.",
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "supporting_count": {"type": "integer"},
+                "opposing_count": {"type": "integer"}
+            },
+            "required": ["supporting_count", "opposing_count"]
+        }
+    }]
+)
