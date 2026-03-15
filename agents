@@ -1,0 +1,54 @@
+from google import genai
+from google.genai import types
+
+client = genai.Client(api_key="YOUR_API_KEY")
+MODEL_ID = "gemini-3-flash-preview"
+
+def run_agent(role_name, system_instruction, user_input, thinking="medium"):
+    """
+    Generalized agent runner using Gemini 3 thinking levels.
+    """
+    response = client.models.generate_content(
+        model=MODEL_ID,
+        config=types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_level=thinking)
+        ),
+        contents=user_input
+    )
+    return response.text
+
+# --- Agent 1: The Scout (Gathering the 'Popular' view) ---
+def scout_agent(topic):
+    instr = "You are 'The Scout'. Find and summarize the most common, mainstream arguments for the given topic."
+    # We use 'low' thinking here because gathering common info is high-speed/low-complexity.
+    return run_agent("Scout", instr, topic, thinking="low")
+
+# --- Agent 2: The Dissenter (Deep Reasoning for Counter-Arguments) ---
+def dissenter_agent(topic, scout_findings):
+    instr = f"""You are 'The Dissenter'. 
+    The Scout found these mainstream points: {scout_findings}.
+    Your task is to find credible, data-backed counter-arguments or overlooked risks.
+    DO NOT agree with the Scout. Focus on the 'missing' perspective."""
+    # We use 'high' thinking here to force deep reasoning and avoid 'lazy' agreement.
+    return run_agent("Dissenter", instr, topic, thinking="high")
+
+# --- Agent 3: The Synthesizer (The Objective Judge) ---
+def synthesizer_agent(scout_data, dissenter_data):
+    instr = "Summarize the conflict between these two viewpoints into a balanced Research Briefing."
+    combined_input = f"Mainstream: {scout_data}\n\nDissenting: {dissenter_data}"
+    return run_agent("Synthesizer", instr, combined_input, thinking="medium")
+
+# --- Execution Loop ---
+topic = "The impact of universal basic income on labor productivity."
+print("Step 1: Scouting...")
+mainstream = scout_agent(topic)
+
+print("Step 2: Dissenting (Deep Reasoning active)...")
+contrarian = dissenter_agent(topic, mainstream)
+
+print("Step 3: Synthesizing Final Report...")
+final_report = synthesizer_agent(mainstream, contrarian)
+
+print("\n--- FINAL RESEARCH BRIEFING ---\n")
+print(final_report)
